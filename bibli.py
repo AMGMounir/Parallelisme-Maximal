@@ -20,34 +20,30 @@ def get_Dependencies(task_system, tache):
         if task.name == tache.name:
             dependencies.extend(dependency_list)
     return [dependency.name for dependency in dependencies]
-
+    
 
 def runSeq(task_system):
-    executed_tasks = set()
-    while len(executed_tasks) < len(task_system):
+    tache_exec = set()
+
+    def exec_tache(task):
+        if task.run:
+            task.run()
+        tache_exec.add(task.name)
+        print("La tache ", task.name,"vient d'etre executé.")
+        time.sleep(1)
+
+    while len(tache_exec) < len(task_system):
         for task, dependencies in task_system.items():
-            if task not in executed_tasks and all(dep in executed_tasks for dep in dependencies):
-                print("Executing task:", task.name)
-                if task.run:
-                    task.run()
-                executed_tasks.add(task)
-                time.sleep(1)
-            elif task not in executed_tasks:
-                print("Task", task.name, "has dependencies:", [dep.name for dep in dependencies])
-                for dependency in dependencies:
-                    print("Executing dependency:", dependency.name)
-                    if dependency.run:
-                        dependency.run()
-                    executed_tasks.add(dependency)
-                    time.sleep(1)
-                if all(dep in executed_tasks for dep in dependencies):
-                    print("Executing task:", task.name)
-                    if task.run:
-                        task.run()
-                    executed_tasks.add(task)
-                    time.sleep(1)
-            else:
-                continue
+            if task.name not in tache_exec and all(dep.name in tache_exec for dep in dependencies):
+                if dependencies:
+                    print("La tache ", task.name, "est dependante de:", get_Dependencies(task_system, task))
+                exec_tache(task)
+
+
+
+
+
+
 
 
 def errormessage(task_system):
