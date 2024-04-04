@@ -9,7 +9,6 @@ B = 0
 C = 0
 D = 0
 
-
 def runT1():
     global X
     X = 1
@@ -42,40 +41,29 @@ def runT8():
     global D
     D = 3
 
-
+# Création des tâches
 t1 = Task(name="T1", run=runT1, writes=[X])
 t2 = Task(name="T2", run=runT2, writes=[Y])
-t3 = Task(name="t3", run=runT3, reads=["X", "Y"], writes=[Z])
+t3 = Task(name="T3", run=runT3, reads=["X", "Y"], writes=[Z])
 t4 = Task(name="T4", run=runT4, writes=[W])
 t5 = Task(name="T5", run=runT5, writes=[A])
 t6 = Task(name="T6", run=runT6, reads=["W", "A"], writes=[B])
 t7 = Task(name="T7", run=runT7, writes=[C])
 t8 = Task(name="T8", run=runT8, writes=[D])
+t9 = Task(name="T8", run=runT8, writes=[D])
 
+# Définition des dépendances entre les tâches
 task_system = {
-    Task("T1", run=runT1): [],
-    Task("T3", run=runT3): [Task("T2")],
-    Task("T2", run=runT2): [Task("T1")],
-    Task("T5", run=runT5): [Task("T3"),Task("T4")],
-    Task("T7", run=runT7): [Task("T5"), Task("T6")],
-    Task("T8", run=runT8): [Task("T7")],
-    Task("T6", run=runT6): [Task("T4")],
-    Task("T4", run=runT4): [Task("T2")]
+    t1: [],
+    t2: [t1],
+    t3: [t2],
+    t4: [t2],
+    t5: [t3, t4],
+    t6: [t4],
+    t7: [t5, t6],
+    t8: [t7]
 }
 
-# Get dependencies for a specific task
-tache = Task("T5", run=runT5)
-dependencies = get_Dependencies(task_system, tache)
-print("Les dependances de ", t5.name," sont : ",dependencies)
-
-
-#runSeq
-print("\nexecution sequentielle :\n")
-runSeq(task_system)
-
-
-#run
-print("\nexecution parallele :\n")
-run(task_system)
-
-errormessage(task_system)
+# Appel de la fonction draw avec le dictionnaire de tâches et leurs dépendances
+#draw(task_system)
+TaskSystem([t1, t2, t3, t4, t5, t6, t7, t8, t9], task_system)
