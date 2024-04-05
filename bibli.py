@@ -2,7 +2,8 @@ import time
 import threading
 import networkx as nx
 import matplotlib.pyplot as plt
-import numpy as np
+import random
+
 
 class Task:
     def __init__(self, name="", reads=None, writes=None, run=None):
@@ -26,18 +27,17 @@ class TaskSystem:
                 dependencies.extend(dependency_list)
         return [dependency.name for dependency in dependencies]
     
-    def build_dependency_matrix(self):
-        matrix_size = len(self.task_system)
-        matrix = [[0 for _ in range(matrix_size)] for _ in range(matrix_size)]
+    def matriceDep(self):
+        matrice_size = len(self.task_system)
+        matrice = [[0 for _ in range(matrice_size)] for _ in range(matrice_size)]
 
         for i, task1 in enumerate(self.task_system):
             for j, task2 in enumerate(self.task_system):
                 if i < j:
                     if set(task1.reads) & set(task2.writes) or set(task2.reads) & set(task1.writes) or set(task1.writes) & set(task2.writes):
-                        matrix[i][j] = 1
+                        matrice[i][j] = 1
 
-        return matrix
-
+        return matrice
 
 
     def runSeq(self):
@@ -68,27 +68,27 @@ class TaskSystem:
         def exec_tache(task):
             with print_lock:
                 print(f"{task.name} a démarré.")
-            if task.run:
-                task.run()
+            
+            task.run()
             with print_lock:
                 print(f"{task.name} a fini de s'éxecuter.")
             tache_exec.add(task)
 
-        def execute_tasks(task_list):
+        def execute_tache(task_list):
             for task in task_list:
                 thread = threading.Thread(target=exec_tache, args=(task,))
                 threads.append(thread)
                 thread.start()
 
         while len(tache_exec) < len(self.task_system):
-            tasks_to_start = []
+            tache_debute = []
 
             for task, dependencies in self.task_system.items():
                 if task not in tache_exec and all(dep in tache_exec for dep in dependencies):
-                    tasks_to_start.append(task)
+                    tache_debute.append(task)
 
-            if tasks_to_start:
-                execute_tasks(tasks_to_start)
+            if tache_debute:
+                execute_tache(tache_debute)
                 
             for thread in threads:
                 thread.join()
@@ -114,100 +114,78 @@ class TaskSystem:
         print(moy_runPar)
 
 
-    def detTestRnd(self, nombrederun):
-        test = []
-
-        for i in range(nombrederun):
-            self.tache_exec = set()
+    def detTestRnd(self, num_executions=10):
+        for _ in range(num_executions):
+            M1 = random.randint(0, 100)
+            M2 = random.randint(0, 100)
+            M3 = random.randint(0, 100)
+            M4 = random.randint(0, 100)
+            M5 = random.randint(0, 100)
             self.run()
-            test.append(self.tache_exec)
 
-        deterministe = all(x == test[0] for x in test)
 
-        if deterministe:
-            print("Le graphe est determinié")
-        else:
-            print("Le graphe n'est pas determiné")
+def paralellisme(task_system, matrice_dep):
+    paraMax = task_system.copy()
 
-def update_task_system_from_matrix(task_system, dependency_matrix):
-    new_task_system = task_system.copy()
-
-    for task, dependencies in new_task_system.items():
-        dependencies.clear()  # Clear existing dependencies
+    for task, dependencies in paraMax.items():
+        dependencies.clear() 
         for i in range(len(task_system)):
-            if dependency_matrix[i][list(task_system.keys()).index(task)] == 1:
+            if matrice_dep[i][list(task_system.keys()).index(task)] == 1:
                 dependencies.append(list(task_system.keys())[i])
 
-    return new_task_system
+    return paraMax
 
-    
+
+def redondance(graph, start, end, path=[]):
+    path = path + [start]
+    if start == end:
+        return [path]
+    if start not in graph:
+        return []
+    paths = []
+    for node in graph[start]:
+        if node not in path:
+            newpaths = redondance(graph, node, end, path)
+            for newpath in newpaths:
+                paths.append(newpath)
+    return paths
+
+
 def draw(task_system):
     G = nx.DiGraph()
 
     for task in task_system.keys():
         G.add_node(task.name)
 
-
     for task, dependencies in task_system.items():
         for dependency in dependencies:
             G.add_edge(dependency.name, task.name)
 
-    for i, t1 in enumerate(task_system.keys()):
-        for j, t2 in enumerate(task_system.keys()):
-            if i >= j:
-                continue
-            if not set(t1.writes).intersection(t2.reads):
-                continue
-            if not set(t2.writes).intersection(t1.reads):
-                continue
-            if not set(t1.writes).intersection(t2.writes):
-                G.add_edge(t1.name, t2.name)
+    # Find all paths in the graph
+    paths = {}
+    for start in G.nodes():
+        for end in G.nodes():
+            if start != end:
+                paths[(start, end)] = redondance(G, start, end)
 
-    pos = nx.spring_layout(G,seed=27)
-    nx.draw(G, pos, with_labels=True, node_size=2000, node_color="red", font_size=10, font_weight="bold",style='dashed')
-    plt.title("Graphe :")
+    # Create a directed graph
+    H = G.to_directed()
+
+    pos = nx.spring_layout(H,seed=911811)
+    # Draw edges
+    for (start, end) in H.edges():
+        path_count = len(paths[(start, end)])
+        if path_count > 1:
+            nx.draw_networkx_edges(H, pos, edgelist=[(start, end)], width=1, arrows=True, edge_color='black', style='dashed')
+        else:
+            nx.draw_networkx_edges(H, pos, edgelist=[(start, end)], width=1, arrows=True, edge_color='black')
+
+    # Draw the graph
+    nx.draw_networkx_nodes(H, pos, node_color='red', node_size=700)
+    nx.draw_networkx_labels(H, pos, font_size=10, font_weight='bold')
+
+    plt.title("Graph")
     plt.show()
-
-
-def domaines(task_system):
-    for task, dependencies in task_system.items():
-        reads = task.reads
-        writes = task.writes
-        print(f"Tache: {task.name}")
-        print(f"Domaine de Lecture: {reads}")
-        print(f"Domaine D'écriture: {writes}")
-        print()
-
-def create_schedule_matrix(task_system):
-    task_list = list(task_system.keys())
-    num_tasks = len(task_list)
-    schedule_matrix = np.zeros((num_tasks, num_tasks), dtype=int)
-    
-    for i, task in enumerate(task_list):
-        dependencies = task_system[task]
-        for dep_task in dependencies:
-            j = task_list.index(dep_task)
-            schedule_matrix[i, j] = 1
-    
-    return schedule_matrix
-
-def check_dependency(task1, task2):
-    L1 = task1.reads
-    E1 = task1.writes
-    L2 = task2.reads
-    E2 = task2.writes
-    
-    # Check if any intersection of read and write sets is non-empty
-    if set(L1) & set(E2) or set(L2) & set(E1) or set(E1) & set(E2):
-        return 1
-    else:
-        return 0
-    
-
-
-
-
-
 
 
 def error_message(task_system):
@@ -240,4 +218,19 @@ def error_message(task_system):
     
     return True
 
+def draw2(task_system):
+    G = nx.DiGraph()
 
+    for task in task_system.keys():
+        G.add_node(task.name)
+
+
+    for task, dependencies in task_system.items():
+        for dependency in dependencies:
+            G.add_edge(dependency.name, task.name)
+
+
+    pos = nx.spring_layout(G,seed=9121837)
+    nx.draw(G, pos, with_labels=True, node_size=2000, node_color="red", font_size=10, font_weight="bold",style='dashed')
+    plt.title("Graphe :")
+    plt.show()
