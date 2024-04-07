@@ -50,15 +50,17 @@ Développer une bibliothèque en Python pour automatiser la parallélisation max
               ```bash
                  $ pip install networkx matplotlib
 
- # Exécution :
+# Exécution 
 
-   Afin de lancer le programme :
+   - Afin de lancer le programme :
 
      $ clone https://github.com/AMGMounir/SYS.git 
 
- # 💻 Auteurs :
+# 💻 Auteurs 
 
    Imane Hai
+
    Kaoutar Oualad
+
    Mounir Amghar
                   
