@@ -32,5 +32,33 @@ Développer une bibliothèque en Python pour automatiser la parallélisation max
 
 # Implémentation
 
- 
+ Le package utilise les importations suivantes :
 
+- Standard : `time`, `threading`, `networkx`, `matplotlib.pyplot`, `random`
+
+| Type | Importation | 
+|-----------|-----------|
+| Standard | time,threading,random|
+| Pypi| NetworkX|
+
+# Installer
+
+- Les modules standard sont déjà inclus dans la bibliothèque Python.
+- Voici les étapes nécessaires pour installer NetworkX :
+              -0- Pour exécuter les commandes suivantes, ouvrez votre terminal ou votre invite de commande :
+              
+              ```bash
+                 $ pip install networkx matplotlib
+
+ # Exécution :
+
+   Afin de lancer le programme :
+
+     $ clone https://github.com/AMGMounir/SYS.git 
+
+ # 💻 Auteurs :
+
+   Imane Hai
+   Kaoutar Oualad
+   Mounir Amghar
+                  
