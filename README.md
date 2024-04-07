@@ -58,9 +58,9 @@ Développer une bibliothèque en Python pour automatiser la parallélisation max
 
 # 💻 Auteurs 
 
-   Imane Hai
+     - Imane Hai
 
-   Kaoutar Oualad
+     - Kaoutar Oualad
 
-   Mounir Amghar
+     - Mounir Amghar
                   
