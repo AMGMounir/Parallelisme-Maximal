@@ -40,21 +40,25 @@ Développer une bibliothèque en Python pour automatiser la parallélisation max
 |-----------|-----------|
 | Standard | time,threading,random|
 | Pypi| NetworkX|
+| Pypi| customtkinter|
 
 # Installer
 
 - Les modules standard sont déjà inclus dans la bibliothèque Python.
-- Voici les étapes nécessaires pour installer NetworkX :
+- Voici les étapes nécessaires pour installer NetworkX et customtkinter :
               -0- Pour exécuter les commandes suivantes, ouvrez votre terminal ou votre invite de commande :
               
               ```bash
                  $ pip install networkx matplotlib
+                 $ pip install customtkinter
 
 # Exécution 
 
    - Afin de lancer le programme :
 
-     $ clone https://github.com/AMGMounir/SYS.git 
+     $ Télécharger le fichier éxecutable: https://drive.google.com/file/d/1lD-nWxCLmxDkWi19kWQF9dAUnfLMtPqd/view?usp=sharing
+     $ clone https://github.com/AMGMounir/SYS.git
+
 
 # 💻 Auteurs 
 
