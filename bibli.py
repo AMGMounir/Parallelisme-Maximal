@@ -3,7 +3,7 @@ import threading
 import networkx as nx
 import matplotlib.pyplot as plt
 import random
-
+import copy
 
 class Task:
     def __init__(self, name="", reads=None, writes=None, run=None):
@@ -27,6 +27,8 @@ class TaskSystem:
                 dependencies.extend(dependency_list)
         return [dependency.name for dependency in dependencies]
     
+
+    # Fonction pour créer une matrice de dépendances entre les tâches
     def matriceDep(self):
         matrice_size = len(self.task_system)
         matrice = [[0 for _ in range(matrice_size)] for _ in range(matrice_size)]
@@ -61,37 +63,42 @@ class TaskSystem:
 
 
     def run(self):
-        tache_exec = set()
-        threads = []
-        print_lock = threading.Lock()
+        
+        tache_exec = set() #set pour connaitre les tâches exécutées
+        threads = [] #liste pour stocker les threads  
+        print_lock = threading.Lock() # verrou pour synchroniser l'impression des messages dans les threads
 
         def exec_tache(task):
-            with print_lock:
+            with print_lock: # Verrouillage pour eviter conflits
                 print(f"{task.name} a démarré.")
+            if task.run:
+                task.run() #execution de la tache
+            self.start = time.perf_counter()
             
-            task.run()
-            with print_lock:
+            with print_lock: 
                 print(f"{task.name} a fini de s'éxecuter.")
-            tache_exec.add(task)
+            tache_exec.add(task)  # Ajout de la tâche exécutée à l'ensemble
 
         def execute_tache(task_list):
             for task in task_list:
-                thread = threading.Thread(target=exec_tache, args=(task,))
+                thread = threading.Thread(target=exec_tache, args=(task,)) # création d'un thread pour chaque tâche 
                 threads.append(thread)
-                thread.start()
+                thread.start() #démarrage du thread
 
         while len(tache_exec) < len(self.task_system):
-            tache_debute = []
+            tache_debute = [] # liste des tâches prêtes à démarre
 
             for task, dependencies in self.task_system.items():
+                # verifie si la tâche n'a pas été exécutée et si toutes ses dépendances ont été exécutées
                 if task not in tache_exec and all(dep in tache_exec for dep in dependencies):
-                    tache_debute.append(task)
+                    tache_debute.append(task) # Ajoute la tâche à la liste des tâches prêtes à démarrer
 
-            if tache_debute:
-                execute_tache(tache_debute)
+            if tache_debute: # Si des tâches sont prêtes à démarrer
+                execute_tache(tache_debute) # Exécution parallèle
                 
             for thread in threads:
-                thread.join()
+                thread.join() # Attente de la fin de tous les threads
+            self.end = time.perf_counter()
 
         print("temps d'execution", self.end - self.start)
 
@@ -110,20 +117,33 @@ class TaskSystem:
         moy_runSeq=sum(t_runSeq)/nombrederun
         moy_runPar=sum(t_runSeq)/nombrederun
 
-        print(moy_runSeq)
-        print(moy_runPar)
+        print("temps moyen séquentiel",moy_runSeq)
+        print("temps moyen parallel",moy_runPar)
+
+    def detTestRnd(self, M1, M2, M3, M4, M5, num_runs=100):
+        for _ in range(num_runs):
+            random_values = {M1: random.randint(1, 100), M2: random.randint(1, 100), M3: random.randint(1, 100), M4: random.randint(1, 100), M5: random.randint(1, 100)}
+            task_system_copy = copy.deepcopy(self.task_system)
+            results = {}
+            for task, dependencies in task_system_copy.items():
+
+                for read in task.reads:
+                    if read not in random_values:
+                        random_values[read] = random.randint(1, 100)
+
+                results[task.name] = {read: random_values[read] for read in task.reads}
+            all_results = []
+            for task, dependencies in task_system_copy.items():
+                task_result = {task.name: results[task.name]}
+                all_results.append(task_result)
+            if len(set(map(frozenset, all_results))) > 1:
+                print("Le système de tâches n'est pas déterministe.")
+                return False
+        print("Le système de tâches est déterministe.")
+        return True
 
 
-    def detTestRnd(self, num_executions=10):
-        for _ in range(num_executions):
-            M1 = random.randint(0, 100)
-            M2 = random.randint(0, 100)
-            M3 = random.randint(0, 100)
-            M4 = random.randint(0, 100)
-            M5 = random.randint(0, 100)
-            self.run()
-
-
+# permet de créer un system de tache a partir de la matrice de dependance (voir matriceDep())
 def paralellisme(task_system, matrice_dep):
     paraMax = task_system.copy()
 
@@ -136,6 +156,7 @@ def paralellisme(task_system, matrice_dep):
     return paraMax
 
 
+#DFS plus court chemin
 def redondance(graph, start, end, path=[]):
     path = path + [start]
     if start == end:
@@ -161,28 +182,30 @@ def draw(task_system):
         for dependency in dependencies:
             G.add_edge(dependency.name, task.name)
 
-    # Find all paths in the graph
+    # trouver tout les chemins
     paths = {}
     for start in G.nodes():
         for end in G.nodes():
             if start != end:
                 paths[(start, end)] = redondance(G, start, end)
 
-    # Create a directed graph
+
     H = G.to_directed()
 
-    pos = nx.spring_layout(H,seed=911811)
-    # Draw edges
+    pos = nx.random_layout(H)
+
+    nx.draw_networkx_nodes(H, pos, node_color='skyblue', node_size=500)
+    nx.draw_networkx_labels(H, pos, font_size=10, font_weight='bold')
+
+
     for (start, end) in H.edges():
         path_count = len(paths[(start, end)])
         if path_count > 1:
-            nx.draw_networkx_edges(H, pos, edgelist=[(start, end)], width=1, arrows=True, edge_color='black', style='dashed')
+            nx.draw_networkx_edges(H, pos, edgelist=[(start, end)], edge_color='black', style='dashed')
         else:
-            nx.draw_networkx_edges(H, pos, edgelist=[(start, end)], width=1, arrows=True, edge_color='black')
+            nx.draw_networkx_edges(H, pos, edgelist=[(start, end)], edge_color='black')
 
-    # Draw the graph
-    nx.draw_networkx_nodes(H, pos, node_color='red', node_size=700)
-    nx.draw_networkx_labels(H, pos, font_size=10, font_weight='bold')
+
 
     plt.title("Graph")
     plt.show()
@@ -218,19 +241,3 @@ def error_message(task_system):
     
     return True
 
-def draw2(task_system):
-    G = nx.DiGraph()
-
-    for task in task_system.keys():
-        G.add_node(task.name)
-
-
-    for task, dependencies in task_system.items():
-        for dependency in dependencies:
-            G.add_edge(dependency.name, task.name)
-
-
-    pos = nx.spring_layout(G,seed=9121837)
-    nx.draw(G, pos, with_labels=True, node_size=2000, node_color="red", font_size=10, font_weight="bold",style='dashed')
-    plt.title("Graphe :")
-    plt.show()
