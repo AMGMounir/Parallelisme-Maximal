@@ -57,6 +57,7 @@ Développer une bibliothèque en Python pour automatiser la parallélisation max
    - Afin de lancer le programme :
 
      $ Télécharger le fichier éxecutable: https://drive.google.com/file/d/1lD-nWxCLmxDkWi19kWQF9dAUnfLMtPqd/view?usp=sharing
+
      $ clone https://github.com/AMGMounir/SYS.git
 
 
