@@ -63,9 +63,10 @@ Développer une bibliothèque en Python pour automatiser la parallélisation max
 
 # 💻 Auteurs 
 
+     - Mounir Amghar
+     
      - Imane Hai
 
      - Kaoutar Oualad
 
-     - Mounir Amghar
                   
